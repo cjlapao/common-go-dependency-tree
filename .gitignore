@@ -1,0 +1,6 @@
+**/goreleaser*
+**/dist/*
+**/out/*
+.env
+**/github-templater*
+.tmp/

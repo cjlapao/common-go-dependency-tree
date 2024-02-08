@@ -1,0 +1,8 @@
+Triage:
+  - "*"
+Community Contribution:
+  - "*"
+Documentation:
+  - "README*"
+  - "docs/**"
+  - "*.md"
