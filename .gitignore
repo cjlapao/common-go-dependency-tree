@@ -4,3 +4,4 @@
 .env
 **/github-templater*
 .tmp/
+coverage/

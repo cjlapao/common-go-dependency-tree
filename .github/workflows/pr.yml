@@ -20,14 +20,14 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21.x'
-        cache-dependency-path: ${{ github.workspace }}/src/go.sum
+        cache-dependency-path: ${{ github.workspace }}/go.sum
 
     - name: Build
-      working-directory: ${{ github.workspace }}/src
+      working-directory: ${{ github.workspace }}
       run: go build -v ./...
 
     - name: Test
-      working-directory: ${{ github.workspace }}/src
+      working-directory: ${{ github.workspace }}
       run: |
         go install github.com/axw/gocov/gocov@latest
         go install github.com/AlekSi/gocov-xml@latest
