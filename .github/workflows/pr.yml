@@ -27,7 +27,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      working-directory: ${{ github.workspace }}/pkg
+      working-directory: ${{ github.workspace }}
       run: |
         go install github.com/axw/gocov/gocov@latest
         go install github.com/AlekSi/gocov-xml@latest
