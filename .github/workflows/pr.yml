@@ -27,14 +27,14 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      working-directory: ${{ github.workspace }}
+      working-directory: ${{ github.workspace }}/pkg
       run: |
         go install github.com/axw/gocov/gocov@latest
         go install github.com/AlekSi/gocov-xml@latest
         go install github.com/matm/gocov-html/cmd/gocov-html@latest
 
         go test -coverprofile coverage.txt -covermode count -v ./...
-        gocov convert coverage.txt | gocov-xml > ../cobertura-coverage.xml
+        gocov convert coverage.txt | gocov-xml > cobertura-coverage.xml
     
     - name: Upload Code Coverage
       uses: actions/upload-artifact@v2
