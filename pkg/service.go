@@ -222,3 +222,9 @@ func (d *DependencyTreeService[T]) Tree() []*DependencyTreeItem[T] {
 func (d *DependencyTreeService[T]) FlatTree() []*DependencyTreeItem[T] {
 	return d.flatTree
 }
+
+func (d *DependencyTreeService[T]) PrintFlatTree() {
+	for _, item := range d.flatTree {
+		d.logger.Info("Id: %v, Name: %v", item.ID, item.Name)
+	}
+}

@@ -1,6 +1,10 @@
 package main
 
-import dependency_tree "github.com/cjlapao/common-go-dependency-tree/pkg"
+import (
+	"fmt"
+
+	dependency_tree "github.com/cjlapao/common-go-dependency-tree"
+)
 
 type Item struct {
 	ID   string
@@ -37,7 +41,10 @@ func main() {
 	_ = dependencyService.DependsOn("ITEM_4", "ITEM_3")
 	_ = dependencyService.DependsOn("ITEM_3", "ITEM_2")
 	_ = dependencyService.DependsOn("ITEM_2", "ITEM_1")
+	fmt.Println("Before:")
+	dependencyService.PrintFlatTree()
 	_, _ = dependencyService.Build()
+	fmt.Println("After:")
 
 	println(dependencyService.String())
 }
