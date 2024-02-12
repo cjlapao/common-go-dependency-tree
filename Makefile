@@ -113,6 +113,14 @@ $(GOSEC):
 	@echo "Installing gosec..."
 	@go install github.com/securego/gosec/v2/cmd/gosec@latest
 
+$(GOREPORTCARD):
+	@echo "Installing goreportcard-cli..."
+	@go install github.com/gojp/goreportcard/cmd/goreportcard-cli@latest
+
+$(GOCYCLO):
+	@echo "Installing gocylco..."
+	@go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
 $(START_SUPER_LINTER_CONTAINER):
 	$(eval CONTAINER_ID := $(shell docker ps -a | grep $(PACKAGE_NAME)-linter | awk '{print $$1}'))
 	@if [ -z $(CONTAINER_ID) ]; then \
