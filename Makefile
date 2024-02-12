@@ -1,9 +1,10 @@
 NAME ?= common-go-dependency-tree
+CONTAINER_ID ?= test
 export PACKAGE_NAME ?= $(NAME)
 ifeq ($(OS),Windows_NT)
-	export VERSION=$(shell .\scripts\workflows\current-version.bat -f VERSION)
+	export VERSION=$(shell type VERSION)
 else
-	export VERSION=$(shell ./scripts/workflows/current-version.sh -f VERSION)
+	export VERSION=$(shell cat VERSION)
 endif
 
 COBERTURA = cobertura
@@ -12,10 +13,10 @@ GOX = gox
 
 GOLANGCI_LINT = golangci-lint
 
+START_SUPER_LINTER_CONTAINER = start_super_linter_container
+
 DEVELOPMENT_TOOLS = $(GOX) $(COBERTURA) $(GOLANGCI_LINT)
-
-GET_CURRENT_LINT_CONTAINER = $(shell docker ps -a -q -f "name=$(PACKAGE_NAME)-linter")
-
+SECURITY_TOOLS = $(GOSEC)
 
 .PHONY: help
 help:
@@ -27,48 +28,69 @@ help:
 version:
 	@echo Version: $(VERSION)
 
-
 .PHONY: test
 test:
 	@echo "Running tests..."
-ifeq ($(OS),Windows_NT)
-	@scripts\test.bat -d ./pkg
-else
-	@scripts/test -d ./pkg
-endif
+	@cd pkg && go test -v -covermode count ./...
+	@echo "Tests finished."
 
 .PHONY: coverage
 coverage:
 	@echo "Running coverage report..."
-ifeq ($(OS),Windows_NT)
-	@scripts\coverage.bat -d ./pkg
-else
-	@scripts/coverage -d ./pkg
+ifeq ("$(wildcard coverage)","")
+	@echo "Creating coverage directory..."
+	@mkdir coverage
 endif
+	@cd pkg && go test -coverprofile coverage.txt -covermode count -v ./...
+	@cd pkg && gocov convert coverage.txt | gocov-xml >../coverage/cobertura-coverage.xml
+	@cd pkg && rm coverage.txt
 
 .PHONY: lint
-lint:
+lint: $(START_SUPER_LINTER_CONTAINER)
 	@echo "Running linter..."
-ifeq ($(GET_CURRENT_LINT_CONTAINER),)
-	@echo "Linter container does not exist, creating it..."
-	@-docker run --name $(PACKAGE_NAME)-linter -e RUN_LOCAL=true -e VALIDATE_ALL_CODEBASE=true -e VALIDATE_JSCPD=false -e CREATE_LOG_FILE=true -e LOG_FILE=lint.log -v .:/tmp/lint ghcr.io/super-linter/super-linter:slim-v5
-else
-	@echo "Linter container already exists, starting it..."
-	@-docker start $(PACKAGE_NAME)-linter --attach
-endif
-	@docker cp $(PACKAGE_NAME)-linter:/tmp/lint/lint.log ./lint-report.log
-	@echo "Linter report saved to lint-report.log"
+	@docker cp $(PACKAGE_NAME)-linter:/tmp/lint/super-linter.log .
+	@echo "Linter report saved to super-linter.log"
+	@docker stop $(PACKAGE_NAME)-linter
 	@echo "Linter finished."
-
 
 .PHONY: build
 build:
 	@echo "Building..."
-ifeq ($(OS),Windows_NT)
-	@scripts\build.bat -d ./pkg -p $(PACKAGE_NAME)
-else
-	@scripts/build -d ./pkg -p $(PACKAGE_NAME)
+ifneq ("$(wildcard out)","")
+	@echo "Creating out directory..."
+	@mkdir out
+	@mkdir out/binaries
 endif
+
+	@cd pkg && go build -o ../out/binaries/$(PACKAGE_NAME)
+	@echo "Build finished."
+
+.PHONY: clean
+clean:
+	@echo "Cleaning..."
+ifneq ("$(wildcard bin)","")
+	@echo "Removing bin directory..."
+	@rm -rf bin
+endif
+ifneq ("$(wildcard out)","")
+	@echo "Removing out directory..."
+	@rm -rf out
+endif
+ifneq ("$(wildcard coverage)","")
+	@echo "Removing coverage directory..."
+	@rm -rf out
+endif
+ifneq ("$(wildcard tmp)","")
+	@echo "Removing tmp directory..."
+	@rm -rf out
+endif
+	@echo "Clean finished."
+
+.PHONY: security-check
+security-check:
+	@echo "Running security check..."
+	@cd pkg && gosec ./...
+	@echo "Security check finished."
 
 .PHONY: deps
 deps: $(DEVELOPMENT_TOOLS)
@@ -85,8 +107,18 @@ $(GOX):
 
 $(GOLANGCI_LINT):
 	@echo "Installing golangci-lint..."
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
-$(START_CURRENT_LINT_CONTAINER):
-	@echo "Linter container already exists, starting it..."
-	@docker start $(PACKAGE_NAME)-linter --attach
+$(GOSEC):
+	@echo "Installing gosec..."
+	@go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+$(START_SUPER_LINTER_CONTAINER):
+	$(eval CONTAINER_ID := $(shell docker ps -a | grep $(PACKAGE_NAME)-linter | awk '{print $$1}'))
+	@if [ -z $(CONTAINER_ID) ]; then \
+	echo "Linter container does not exist, creating it..."; \
+	docker run --name $(PACKAGE_NAME)-linter -e RUN_LOCAL=true -e VALIDATE_ALL_CODEBASE=true -e VALIDATE_JSCPD=false -e CREATE_LOG_FILE=true -e VALIDATE_GO=false -v .:/tmp/lint ghcr.io/super-linter/super-linter:slim-v5; \
+	else \
+	echo "Linter container already exists $(CONTAINER_ID), starting it..."; \
+	docker start $(PACKAGE_NAME)-linter --attach; \
+	fi

@@ -12,7 +12,6 @@ jobs:
   lint:
     name: Lint Codebase
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         id: checkout
@@ -43,3 +42,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
+          VALIDATE_GO: false

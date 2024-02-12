@@ -2,6 +2,7 @@
 **/dist/*
 **/out/*
 .env
-**/github-templater*
+
 .tmp/
 coverage/
+super-linter.log
