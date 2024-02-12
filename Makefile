@@ -122,11 +122,21 @@ $(GOCYCLO):
 	@go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 
 $(START_SUPER_LINTER_CONTAINER):
+ifeq ($(OS), Windows_NT)
+	$(eval CONTAINER_ID := $(shell  docker ps -a -q -f "name=$(PACKAGE_NAME)-linter"))
+	@IF "$(CONTAINER_ID)" EQU "" (\
+	docker run --name $(PACKAGE_NAME)-linter -e DEFAULT_BRANCH=main -e RUN_LOCAL=true -e VALIDATE_ALL_CODEBASE=true -e VALIDATE_JSCPD=false -e CREATE_LOG_FILE=true -e VALIDATE_GO=false -v .:/tmp/lint ghcr.io/super-linter/super-linter:latest \
+	) \
+	ELSE (\
+	docker start $(PACKAGE_NAME)-linter --attach \
+	);
+else
 	$(eval CONTAINER_ID := $(shell docker ps -a | grep $(PACKAGE_NAME)-linter | awk '{print $$1}'))
 	@if [ -z $(CONTAINER_ID) ]; then \
 	echo "Linter container does not exist, creating it..."; \
-	docker run --platform linux/amd64 --name $(PACKAGE_NAME)-linter -e DEFAULT_BRANCH=main -e RUN_LOCAL=true -e VALIDATE_ALL_CODEBASE=true -e VALIDATE_JSCPD=false -e CREATE_LOG_FILE=true -e VALIDATE_GO=false -v .:/tmp/lint ghcr.io/super-linter/super-linter:slim-latest \
+	docker run --name $(PACKAGE_NAME)-linter -e RUN_LOCAL=true -e VALIDATE_ALL_CODEBASE=true -e VALIDATE_JSCPD=false -e CREATE_LOG_FILE=true -e VALIDATE_GO=false -v .:/tmp/lint ghcr.io/super-linter/super-linter:slim-v5; \
 	else \
 	echo "Linter container already exists $(CONTAINER_ID), starting it..."; \
 	docker start $(PACKAGE_NAME)-linter --attach; \
 	fi
+endif
