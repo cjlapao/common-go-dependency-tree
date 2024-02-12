@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 while getopts ":t:f:" opt; do
   case $opt in
   t)
