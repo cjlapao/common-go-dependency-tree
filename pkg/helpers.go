@@ -6,12 +6,11 @@ import (
 )
 
 func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[T], error) {
-	// Nothing to shift, returning
-	if len(d.flatTree) == 0 {
+	switch size := len(d.flatTree); {
+	case size == 0:
+		// Nothing to shift, returning
 		return d.flatTree, nil
-	}
-
-	if len(d.flatTree) > 1 {
+	case size > 1:
 		// not inside the range of the array
 		if from > len(d.flatTree) || from == -1 || to > len(d.flatTree) || to == -1 {
 			return d.flatTree, nil
@@ -19,7 +18,8 @@ func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[
 
 		// Deciding the direction of the shift
 		pos := from - to
-		if pos < 0 {
+		switch itemPosition := pos; {
+		case itemPosition < 0:
 			if d.IsDebug() && d.IsVerbose() {
 				d.logger.Debug("Shifting forwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
 			}
@@ -27,14 +27,11 @@ func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[
 				if from == to {
 					break
 				}
-				item := d.flatTree[from]
-				d.flatTree[from] = d.flatTree[from+1]
-				d.flatTree[from+1] = item
+				d.flatTree[from], d.flatTree[from+1] = d.flatTree[from+1], d.flatTree[from]
 
 				from += 1
 			}
-		}
-		if pos > 0 {
+		case itemPosition > 0:
 			if d.IsDebug() && d.IsVerbose() {
 				d.logger.Debug("Shifting backwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
 			}
@@ -42,10 +39,7 @@ func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[
 				if from == to {
 					break
 				}
-				item := d.flatTree[from]
-				d.flatTree[from] = d.flatTree[from-1]
-				d.flatTree[from-1] = item
-
+				d.flatTree[from], d.flatTree[from-1] = d.flatTree[from-1], d.flatTree[from]
 				from -= 1
 			}
 		}
@@ -98,7 +92,7 @@ func (d *DependencyTreeService[T]) printTree(tree []*DependencyTreeItem[T], leve
 		}
 
 		msg += item.Name
-		// d.logger.Debug(msg)
+
 		lines = append(lines, msg)
 		childLines := d.printTree(item.Children, level+1, prefix)
 		lines = append(lines, childLines...)
