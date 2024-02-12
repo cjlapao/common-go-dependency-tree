@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	dependency_tree "github.com/cjlapao/common-go-dependency-tree"
+	dependency_tree "github.com/cjlapao/common-go-dependency-tree/pkg"
 )
 
 type Item struct {
