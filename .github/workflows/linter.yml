@@ -17,7 +17,7 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
         with:
-            fetch-depth: 0
+          fetch-depth: 0
 
       - name: Setup Go 1.21.x
         uses: actions/setup-go@v4
@@ -39,6 +39,8 @@ jobs:
         id: super-linter
         uses: super-linter/super-linter/slim@v6.0.0
         env:
+          FILTER_REGEX_EXCLUDE: bin/**/*
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
           VALIDATE_GO: false
