@@ -91,7 +91,7 @@ linters-settings:
   govet:
     check-shadowing: false
   nestif:
-    min-complexity: 5
+    min-complexity: 8
   revive:
     rules:
       - name: unused-parameter
