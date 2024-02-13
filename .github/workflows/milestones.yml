@@ -16,7 +16,7 @@ jobs:
             GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
         run: |
             gh extension install valeriobelli/gh-milestone
-            NEXT_MILESTONE=$(gh milestone list --json number --jq ".[-1].number")
+            NEXT_MILESTONE=$(gh milestone list --json title --jq ".[-1].title")
             if [ ! -z "$NEXT_MILESTONE" ]; then
                 gh pr edit  ${{ github.head_ref }} --milestone "$NEXT_MILESTONE"
             fi
