@@ -80,8 +80,8 @@ jobs:
             --title "Release version ${{ env.new_version }}" \
             --body-file releasenotes.md \
             --base main \
-            --label release-request \
             --head release/${{ env.new_version }}
           gh pr ready 
+          gh pr edit --label release-request --add-project "Common Go Framework"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
