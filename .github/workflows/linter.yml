@@ -16,6 +16,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Go 1.21.x
         uses: actions/setup-go@v4
@@ -35,7 +37,7 @@ jobs:
 
       - name: Lint Codebase
         id: super-linter
-        uses: super-linter/super-linter/slim@v5
+        uses: super-linter/super-linter/slim@v6.0.0
         env:
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: bin/**/*
@@ -43,3 +45,4 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
           VALIDATE_GO: false
+          VALIDATE_CHECKOV: false

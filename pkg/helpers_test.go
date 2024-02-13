@@ -1,4 +1,4 @@
-package dependency_tree
+package dependencytree
 
 import (
 	"strings"
@@ -59,4 +59,17 @@ func TestPrintTree(t *testing.T) {
 
 	lines := dpService.printTree(dpService.tree, 0, "")
 	assert.Equal(t, expectedComplexString, strings.Join(lines, "\n"))
+}
+
+func TestShiftToWithInvalidIndex(t *testing.T) {
+	logger := log.Get()
+	logger.LogLevel = log.Debug
+	dpService := Get(MockObject1{})
+	dpService.SetLogger(logger)
+
+	_, _ = dpService.AddRootItem("item_6", "item 6", MockObject1{id: "item_6", someStoredValue: "item 6"})
+
+	_, err := dpService.shiftTo(0, 4)
+
+	assert.Error(t, err)
 }

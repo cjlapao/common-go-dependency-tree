@@ -1,4 +1,4 @@
-package dependency_tree
+package dependencytree
 
 import (
 	"fmt"
@@ -25,11 +25,6 @@ func (d *DependencyTreeService[T]) Build() ([]*DependencyTreeItem[T], error) {
 	// we also might have services that might need sifting as they didn't fall into this like
 	// a late service that has only dependency on b but not on c
 	// }
-
-	values, err = d.buildLeftDependency()
-	if err != nil {
-		return values, err
-	}
 
 	// Building parent dependency
 	err = d.buildChildDependency()
@@ -112,66 +107,14 @@ outerLoop:
 		needsShifting := false
 	treeLoop:
 		for svcIndex, item := range d.flatTree {
+			var err error
 			dependencies := item.IsDependentOn()
-		dependenciesLoop:
 			for _, dependency := range dependencies {
-				dependencyIndex, err := d.GetItemIndex(dependency)
+				needsShifting, err = d.buildRightItemDependency(item, dependency, svcIndex)
 				if err != nil {
 					return nil, err
 				}
-
-				if dependencyIndex < 0 {
-					err := fmt.Errorf("dependency on %s of service %s was not found in the context configuration", dependency, item.Name)
-					return nil, err
-				}
-
-				if svcIndex < dependencyIndex {
-					needsShifting = true
-					if d.IsDebug() && d.IsVerbose() {
-						d.logger.Debug("Shifting %s on index %s to index %s", item.Name, strconv.Itoa(svcIndex), strconv.Itoa(dependencyIndex))
-					}
-
-					// shiftRight(dependencyIndex - 1)
-					_, err := d.shiftTo(svcIndex, dependencyIndex)
-					if err != nil {
-						return nil, err
-					}
-					// shifting all of the children to the same position as the parent
-					children := d.GetItemChildren(item.ID)
-					if len(children) == 0 {
-						continue dependenciesLoop
-					}
-
-					currentIndex := 0
-				childrenLoop:
-					for {
-						childIndex, err := d.GetItemIndex(children[currentIndex].ID)
-						if err != nil {
-							return nil, err
-						}
-
-						if childIndex < 0 {
-							err := fmt.Errorf("dependency on %s of service %s was not found in the context configuration", children[currentIndex].Name, item.Name)
-							return nil, err
-						}
-
-						if d.IsDebug() && d.IsVerbose() {
-							d.logger.Debug("Shifting %s on index %s to index %s", children[currentIndex].Name, strconv.Itoa(childIndex), strconv.Itoa(dependencyIndex))
-						}
-
-						_, err = d.shiftTo(childIndex, dependencyIndex)
-						if err != nil {
-							return nil, err
-						}
-
-						currentIndex += 1
-						if currentIndex == len(children) {
-							break childrenLoop
-						}
-					}
-				}
 			}
-
 			if needsShifting {
 				break treeLoop
 			}
@@ -191,67 +134,65 @@ outerLoop:
 	return d.flatTree, nil
 }
 
-func (d *DependencyTreeService[T]) buildLeftDependency() ([]*DependencyTreeItem[T], error) {
-	idx := 0
-	for {
-		shiftHappened := false
-		// For each loop after a shift we need to re-update our tree so we know of the position shifting
-		tree, err := d.updateTree()
+func (d *DependencyTreeService[T]) buildRightItemDependency(item *DependencyTreeItem[T], dependency string, svcIndex int) (bool, error) {
+	needsShifting := false
+	dependencyIndex, err := d.GetItemIndex(dependency)
+	if err != nil {
+		return false, err
+	}
+
+	if dependencyIndex < 0 {
+		err := fmt.Errorf("dependency on %s of service %s was not found in the context configuration", dependency, item.Name)
+		return false, err
+	}
+
+	if svcIndex < dependencyIndex {
+		needsShifting = true
+		d.printVerbosef("Shifting %s on index %s to index %s", item.Name, strconv.Itoa(svcIndex), strconv.Itoa(dependencyIndex))
+		_, err := d.shiftTo(svcIndex, dependencyIndex)
 		if err != nil {
-			return nil, err
-		}
-		for _, item := range d.flatTree {
-			treeItem := tree[item.Name]
-			highestIndex := -1
-			changeTo := ""
-			change := true
-
-			if treeItem.highest == -1 || treeItem.lowest == -1 {
-				continue
-			}
-
-			if treeItem.index < treeItem.lowest || treeItem.index-1 > treeItem.highest {
-				for k, kv := range tree {
-					if kv.highest == treeItem.highest {
-						if kv.index > highestIndex && kv.index != treeItem.index {
-							highestIndex = kv.index
-							changeTo = k
-						}
-
-						if kv.index == treeItem.index {
-							if treeItem.index-1 == highestIndex {
-								change = false
-								break
-							}
-						}
-					}
-				}
-
-				if change && highestIndex != -1 && treeItem.index > highestIndex && treeItem.index != highestIndex+1 {
-					if d.IsDebug() && d.IsVerbose() {
-						d.logger.Debug("[%s] %s should move to %s after %s", fmt.Sprintf("%d", treeItem.index), item.Name, fmt.Sprintf("%d", highestIndex+1), changeTo)
-					}
-					_, err := d.shiftTo(treeItem.index, highestIndex+1)
-					if err != nil {
-						return nil, err
-					}
-					shiftHappened = true
-					break
-				}
-			}
+			return false, err
 		}
 
-		idx += 1
-		if !shiftHappened || idx > 1000 {
-			if idx == 1000 {
-				err := fmt.Errorf("something went wrong and we shifted more than 1000 items")
-				return nil, err
+		// shifting all of the children to the same position as the parent
+		children := d.GetItemChildren(item.ID)
+		if len(children) == 0 {
+			return false, nil
+		}
+
+		currentIndex := 0
+		for {
+			currentIndex, err = d.buildRightItemChildrenItemDependency(item, children, currentIndex, dependencyIndex)
+			if err != nil {
+				return false, err
 			}
-			break
+			if currentIndex == len(children) {
+				break
+			}
 		}
 	}
 
-	return d.flatTree, nil
+	return needsShifting, nil
+}
+
+func (d *DependencyTreeService[T]) buildRightItemChildrenItemDependency(item *DependencyTreeItem[T], children []*DependencyTreeItem[T], currentIndex int, dependencyIndex int) (int, error) {
+	childIndex, err := d.GetItemIndex(children[currentIndex].ID)
+	if err != nil {
+		return -1, err
+	}
+	if childIndex < 0 {
+		err := fmt.Errorf("dependency on %s of service %s was not found in the context configuration", children[currentIndex].Name, item.Name)
+		return -1, err
+	}
+	d.printVerbosef("Shifting %s on index %s to index %s", children[currentIndex].Name, strconv.Itoa(childIndex), strconv.Itoa(dependencyIndex))
+
+	_, err = d.shiftTo(childIndex, dependencyIndex)
+	if err != nil {
+		return -1, err
+	}
+	currentIndex += 1
+
+	return currentIndex, nil
 }
 
 func (d *DependencyTreeService[T]) updateTree() (map[string]*DependencyTreeItem[T], error) {
@@ -304,23 +245,22 @@ func (d *DependencyTreeService[T]) shiftChildItems(index int) (bool, error) {
 		offset := offsetParentIndex + currentChildIndex + 1
 
 		if currentIdx != offset {
-			d.logger.Debug("Parent: %v, Child: %v\n", d.flatTree[index].Name, child.Name)
+			d.printVerbosef("Parent: %v, Child: %v\n", d.flatTree[index].Name, child.Name)
 			shiftedItem = true
-			if d.IsDebug() && d.IsVerbose() {
-				d.logger.Debug("Shifting %s child %v on index %s to index %s", d.flatTree[index].Name, child.Name, strconv.Itoa(currentIdx), strconv.Itoa(offset))
-			}
 
+			d.printVerbosef("Shifting %s child %v on index %s to index %s", d.flatTree[index].Name, child.Name, strconv.Itoa(currentIdx), strconv.Itoa(offset))
 			_, err := d.shiftTo(currentIdx, offset)
 			if err != nil {
 				return false, err
 			}
 
 			if len(d.flatTree[offset].Children) > 0 {
-				shuffledChilds, err := d.shiftChildItems(offset)
+				shuffledChildren, err := d.shiftChildItems(offset)
 				if err != nil {
 					return false, err
 				}
-				if shuffledChilds {
+
+				if shuffledChildren {
 					offsetParentIndex = offsetParentIndex + len(d.flatTree[offset].Children)
 					didShuffle = true
 				}

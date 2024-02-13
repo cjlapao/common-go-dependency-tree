@@ -1,4 +1,4 @@
-package dependency_tree
+package dependencytree
 
 import (
 	"errors"

@@ -8,6 +8,14 @@ labelPRBasedOnFilePath:
 
   test:
     - pkg/**/*_test.go
+  triage:
+    - "pkg/**/*"
+    - "test/**/"
+    - "docs/**/*"
+  community contribution:
+    - "pkg/**/*"
+    - "test/**/*"
+    - "docs/**/*"
 
 firstPRWelcomeComment: >
   Thanks for opening this pull request! Please check out our contributing guidelines.

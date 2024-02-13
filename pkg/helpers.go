@@ -1,17 +1,32 @@
-package dependency_tree
+package dependencytree
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
 
+const firstLine = "┌─ "
+const line = "|  "
+const middleLine = "├─ "
+const lastLine = "└─ "
+
+func (d *DependencyTreeService[T]) printVerbosef(format string, args ...interface{}) {
+	if d.IsDebug() && d.IsVerbose() {
+		d.logger.Debug(format, args...)
+	}
+}
+
 func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[T], error) {
-	// Nothing to shift, returning
-	if len(d.flatTree) == 0 {
-		return d.flatTree, nil
+	if from > len(d.flatTree) || from == -1 || to > len(d.flatTree) || to == -1 {
+		return d.flatTree, errors.New("from or to index is out of range")
 	}
 
-	if len(d.flatTree) > 1 {
+	switch size := len(d.flatTree); {
+	case size == 0:
+		// Nothing to shift, returning
+		return d.flatTree, nil
+	case size > 1:
 		// not inside the range of the array
 		if from > len(d.flatTree) || from == -1 || to > len(d.flatTree) || to == -1 {
 			return d.flatTree, nil
@@ -19,39 +34,38 @@ func (d *DependencyTreeService[T]) shiftTo(from, to int) ([]*DependencyTreeItem[
 
 		// Deciding the direction of the shift
 		pos := from - to
-		if pos < 0 {
-			if d.IsDebug() && d.IsVerbose() {
-				d.logger.Debug("Shifting forwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
-			}
-			for {
-				if from == to {
-					break
-				}
-				item := d.flatTree[from]
-				d.flatTree[from] = d.flatTree[from+1]
-				d.flatTree[from+1] = item
-
-				from += 1
-			}
-		}
-		if pos > 0 {
-			if d.IsDebug() && d.IsVerbose() {
-				d.logger.Debug("Shifting backwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
-			}
-			for {
-				if from == to {
-					break
-				}
-				item := d.flatTree[from]
-				d.flatTree[from] = d.flatTree[from-1]
-				d.flatTree[from-1] = item
-
-				from -= 1
-			}
+		switch itemPosition := pos; {
+		case itemPosition < 0:
+			d.moveForwards(from, to)
+		case itemPosition > 0:
+			d.moveBackwards(from, to)
 		}
 	}
 
 	return d.flatTree, nil
+}
+
+func (d *DependencyTreeService[T]) moveBackwards(from, to int) {
+	d.printVerbosef("Shifting backwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
+	for {
+		if from == to {
+			break
+		}
+		d.flatTree[from], d.flatTree[from-1] = d.flatTree[from-1], d.flatTree[from]
+		from -= 1
+	}
+}
+
+func (d *DependencyTreeService[T]) moveForwards(from, to int) {
+	d.printVerbosef("Shifting forwards from %s to %s", strconv.Itoa(from), strconv.Itoa(to))
+	for {
+		if from == to {
+			break
+		}
+		d.flatTree[from], d.flatTree[from+1] = d.flatTree[from+1], d.flatTree[from]
+
+		from += 1
+	}
 }
 
 func (d *DependencyTreeService[T]) printTree(tree []*DependencyTreeItem[T], level int, prefix string) []string {
@@ -68,41 +82,53 @@ func (d *DependencyTreeService[T]) printTree(tree []*DependencyTreeItem[T], leve
 		}
 
 		if idx == 0 {
-			if level > 0 {
-				if len(tree) == 1 {
-					msg += "└─ "
-					prefix += "|  "
-				} else {
-					msg += "├─ "
-					prefix += "|  "
-				}
-			} else {
-				msg += "┌─ "
-				prefix += "|  "
-			}
+			msg, prefix = d.printStartItem(tree, level, msg, prefix)
 		} else if idx == len(tree)-1 {
-			msg += "└─ "
-			if len(item.Children) > 0 {
-				if level > 0 {
-					prefix = strings.TrimSpace(prefix)
-					prefix = prefix[:len(prefix)-2]
-					prefix = prefix + strings.Repeat("  ", level+1)
-				} else {
-					prefix = strings.Repeat("  ", level+1)
-				}
-			} else {
-				prefix = strings.Repeat("  ", level+1)
-			}
+			msg, prefix = d.printLastItem(item, level, msg, prefix)
 		} else {
-			msg += "├─ "
+			msg += middleLine
 		}
 
 		msg += item.Name
-		// d.logger.Debug(msg)
+
 		lines = append(lines, msg)
 		childLines := d.printTree(item.Children, level+1, prefix)
 		lines = append(lines, childLines...)
 	}
 
 	return lines
+}
+
+func (d *DependencyTreeService[T]) printStartItem(tree []*DependencyTreeItem[T], level int, msg, prefix string) (string, string) {
+	if level > 0 {
+		if len(tree) == 1 {
+			msg += lastLine
+			prefix += line
+		} else {
+			msg += middleLine
+			prefix += line
+		}
+	} else {
+		msg += firstLine
+		prefix += line
+	}
+
+	return msg, prefix
+}
+
+func (d *DependencyTreeService[T]) printLastItem(item *DependencyTreeItem[T], level int, msg, prefix string) (string, string) {
+	msg += lastLine
+	if len(item.Children) > 0 {
+		if level > 0 {
+			prefix = strings.TrimSpace(prefix)
+			prefix = prefix[:len(prefix)-2]
+			prefix = prefix + strings.Repeat("  ", level+1)
+		} else {
+			prefix = strings.Repeat("  ", level+1)
+		}
+	} else {
+		prefix = strings.Repeat("  ", level+1)
+	}
+
+	return msg, prefix
 }
