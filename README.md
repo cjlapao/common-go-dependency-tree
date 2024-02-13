@@ -7,5 +7,3 @@
 This is a simple tool to generate a dependency tree for a given struct in a Go project. you can use it to run modules in sequence depending on their dependencies without a lot of boilerplate code.
 
 It is a generic service and you can have multiple trees for different structs in your project.
-
-some extra test:
