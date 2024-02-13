@@ -22,7 +22,9 @@ jobs:
   create-release-pr:
     name: Create release PR
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       new_version: ""
     steps:
@@ -82,6 +84,5 @@ jobs:
             --base main \
             --head release/${{ env.new_version }}
           gh pr edit --add-label release-request
-          gh workflow run linter.yml  --ref release/${{ env.new_version }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

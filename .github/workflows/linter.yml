@@ -10,8 +10,6 @@ on:
     - edited
     - ready_for_review
     - review_requested
-  workflow_dispatch:
-
 
 permissions:
   contents: read
