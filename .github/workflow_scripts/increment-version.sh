@@ -15,7 +15,7 @@ while getopts ":t:f:" opt; do
 	esac
 done
 
-if [ -z "$FILE" ]; then 
+if [ -z "$FILE" ]; then
 	echo "You need to specify the version file with the -f flag"
 fi
 

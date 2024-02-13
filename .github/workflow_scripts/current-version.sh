@@ -1,7 +1,7 @@
 #!/bin/bash
 
 while getopts ":f:" opt; do
-		case $opt in
+	case $opt in
 	f)
 		FILE=$OPTARG
 		;;
