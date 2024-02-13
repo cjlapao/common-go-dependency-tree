@@ -12,14 +12,11 @@
 name: "CodeQL"
 
 on:
+  push:
+    branches:
+    - 'release/*'
   pull_request:
     branches: [ "main" ]
-    types: 
-        - labeled
-        - opened
-        - reopened
-        - ready_for_review
-        - review_requested
   schedule:
     - cron: '40 14 * * 0'
 
