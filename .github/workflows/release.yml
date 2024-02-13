@@ -2,7 +2,9 @@ name: Create Release PR
 run-name: Create release PR for new ${{ github.event.inputs.version }} version
 
 permissions:
+  contents: write
   pull-requests: write
+  actions: write
 
 on:
   workflow_dispatch:
