@@ -85,4 +85,4 @@ jobs:
             --head release/${{ env.new_version }}
           gh pr edit --add-label release-request
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
