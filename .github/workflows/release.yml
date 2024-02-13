@@ -81,7 +81,6 @@ jobs:
             --body-file releasenotes.md \
             --base main \
             --head release/${{ env.new_version }}
-          gh pr ready 
-          gh pr edit --label release-request --add-project "Common Go Framework"
+          gh pr edit --add-label release-request --add-project "Common Go Framework"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
