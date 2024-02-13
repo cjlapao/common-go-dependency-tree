@@ -1,0 +1,21 @@
+name: Assign Milestone
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  assign-milestone:
+    env:
+      repo: ${{ github.head_ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v3
+
+      - name: Assign Milestone
+        env:
+            GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
+        run: |
+            gh pr edit  ${{ env.repo }} --project "Common Go Framework"
+
