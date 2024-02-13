@@ -1,4 +1,4 @@
-name: Assign Milestone
+name: Assign Projects
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ jobs:
   assign-milestone:
     env:
       repo: ${{ github.head_ref }}
+      project: "Common Go Framework"
     runs-on: ubuntu-latest
     steps:
       - name: git checkout
@@ -17,5 +18,5 @@ jobs:
         env:
             GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
         run: |
-            gh pr edit  ${{ env.repo }} --project "Common Go Framework"
+            gh pr edit  ${{ env.repo }} --add-project "${{ env.project }}"
 
