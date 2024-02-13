@@ -28,7 +28,7 @@ CHANGELIST=$(gh pr list --repo "$REPO_NAME" --base main --state merged --json ti
 echo "Release $NEW_RELEASE" >>releasenotes.md
 
 echo "$CHANGELIST" | jq -r '.[].title' | while read -r line; do
-  echo " - $line" >>releasenotes.md
+	echo " - $line" >>releasenotes.md
 done
 
 echo " "

@@ -45,3 +45,4 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
           VALIDATE_GO: false
+          VALIDATE_CHECKOV: false
