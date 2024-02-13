@@ -5,9 +5,7 @@ on:
     types: 
     - labeled
     - opened
-    - synchronize
     - reopened
-    - edited
     - ready_for_review
     - review_requested
 
@@ -47,7 +45,7 @@ jobs:
         id: super-linter
         uses: super-linter/super-linter/slim@v6.0.0
         env:
-          DEFAULT_BRANCH: ${{ github.head_ref}}
+          DEFAULT_BRANCH: origin/${{ github.head_ref}}
           FILTER_REGEX_EXCLUDE: bin/**/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true

@@ -12,16 +12,12 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
     types: 
         - labeled
         - opened
-        - synchronize
         - reopened
-        - edited
         - ready_for_review
         - review_requested
   schedule:
