@@ -22,9 +22,7 @@ jobs:
   create-release-pr:
     name: Create release PR
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    permissions: write-all
     env:
       new_version: ""
     steps:
