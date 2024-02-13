@@ -82,5 +82,6 @@ jobs:
             --base main \
             --head release/${{ env.new_version }}
           gh pr edit --add-label release-request
+          gh workflow run linter.yml  --ref release/${{ env.new_version }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
