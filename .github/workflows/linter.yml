@@ -2,7 +2,14 @@ name: Lint Codebase
 
 on:
   pull_request:
-    types: [labeled, opened, synchronize, reopened, edited, ready_for_review, review_requested]
+    types: 
+    - labeled
+    - opened
+    - synchronize
+    - reopened
+    - edited
+    - ready_for_review
+    - review_requested
 
 permissions:
   contents: read

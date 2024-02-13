@@ -2,7 +2,14 @@ name: PR Builder
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: 
+        - labeled
+        - opened
+        - synchronize
+        - reopened
+        - edited
+        - ready_for_review
+        - review_requested
     branches: 
       - main
 
