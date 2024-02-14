@@ -87,7 +87,7 @@ jobs:
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: "release-v${{ env.EXT_VERSION }}",
+              tag_name: "v${{ env.EXT_VERSION }}",
               name: "v${{ env.EXT_VERSION }}",
               draft: false,
               prerelease: false

@@ -1,11 +1,14 @@
 name: Assign Milestone
 
 on:
+  issues: 
+    types: [opened, reopened]
   pull_request:
     types: [opened, reopened]
 
 jobs:
   assign-milestone:
+    if: ${{ github.event.pull_request.draft == false && !startsWith(github.event.pull_request, 'BUMP') && !startsWith(github.head_ref, 'release/') && github.event_name == 'pull_request'}}
     name: Assign Milestone
     env:
       repo: ${{ github.head_ref }}
@@ -13,7 +16,6 @@ jobs:
     steps:
       - name: git checkout
         uses: actions/checkout@v3
-
       - name: Assign Milestone
         env:
             GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
