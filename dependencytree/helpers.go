@@ -75,10 +75,26 @@ func (d *DependencyTreeService[T]) printTree(tree []*DependencyTreeItem[T], leve
 		spacer = prefix
 	}
 
+	if level == 0 && len(tree) == 1 {
+		msg := ""
+		msg, prefix = d.printLastItem(tree[0], level, msg, prefix)
+		msg += tree[0].Name
+		lines = append(lines, msg)
+		childLines := d.printTree(tree[0].Children, level+1, prefix)
+		lines = append(lines, childLines...)
+		return lines
+	}
+
 	for idx, item := range tree {
 		msg := spacer
-		if level > 0 && !strings.HasPrefix(msg, "|") {
-			msg += " "
+		if level > 0 {
+
+			if strings.HasPrefix(strings.TrimSpace(msg), "|") {
+				msg += " "
+			}
+			if !strings.HasPrefix(msg, "|") {
+				msg += " "
+			}
 		}
 
 		if idx == 0 {
@@ -121,7 +137,11 @@ func (d *DependencyTreeService[T]) printLastItem(item *DependencyTreeItem[T], le
 	if len(item.Children) > 0 {
 		if level > 0 {
 			prefix = strings.TrimSpace(prefix)
-			prefix = prefix[:len(prefix)-2]
+			if prefix == "|" {
+				prefix = ""
+			} else {
+				prefix = prefix[:len(prefix)-2]
+			}
 			prefix = prefix + strings.Repeat("  ", level+1)
 		} else {
 			prefix = strings.Repeat("  ", level+1)

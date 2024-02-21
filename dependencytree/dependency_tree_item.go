@@ -15,6 +15,7 @@ type DependencyTreeItem[T interface{}] struct {
 	lowest        int
 	isDependentOn []string
 	parentName    string
+	Parent        *DependencyTreeItem[T]
 	obj           T
 	requiredBy    []string
 	Children      []*DependencyTreeItem[T]
@@ -40,6 +41,7 @@ func NewDependencyTreeItem[T interface{}](id string, name string, value T) (*Dep
 		lowest:        0,
 		isDependentOn: []string{},
 		parentName:    "root",
+		Parent:        nil,
 		obj:           value,
 		requiredBy:    []string{},
 		Children:      []*DependencyTreeItem[T]{},
@@ -74,8 +76,20 @@ func (dt *DependencyTreeItem[T]) IsDependentOn() []string {
 	return dt.isDependentOn
 }
 
-func (dt *DependencyTreeItem[T]) Parent() string {
+func (dt *DependencyTreeItem[T]) GetParentName() string {
+	if dt.Parent != nil {
+		return dt.Parent.Name
+	}
+
 	return dt.parentName
+}
+
+func (dt *DependencyTreeItem[T]) GetParentId() string {
+	if dt.Parent != nil {
+		return dt.Parent.ID
+	}
+
+	return ""
 }
 
 func (dt *DependencyTreeItem[T]) RequiredBy() []string {

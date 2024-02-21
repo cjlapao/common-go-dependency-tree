@@ -8,6 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var expectedSimpleString = `└─ item 1`
+
+var expectedSimpleTreeWithChildrenString = `└─ item 2
+   ├─ item 2 Child 2
+   ├─ item 2 Child 1
+   |  ├─ item 2 Child 1 Child 2
+   |  └─ item 2 Child 1 Child 1
+   └─ item 2 Child 3
+      ├─ item 2 Child 3 Child 2
+      └─ item 2 Child 3 Child 1`
+
 var expectedComplexString = `┌─ item 1
 ├─ item 2
 |  ├─ item 2 Child 2
@@ -25,7 +36,44 @@ var expectedComplexString = `┌─ item 1
    ├─ item 6 Child 2
    └─ item 6 Child 1`
 
-func TestPrintTree(t *testing.T) {
+func TestPrintSimpleTree(t *testing.T) {
+	logger := log.Get()
+	logger.LogLevel = log.Debug
+	dpService := Get(MockObject1{})
+	dpService.SetLogger(logger)
+
+	_, _ = dpService.AddRootItem("item_1", "item 1", MockObject1{id: "item_1", someStoredValue: "item 1"})
+
+	_, err := dpService.Build()
+	assert.NoError(t, err)
+
+	lines := dpService.printTree(dpService.tree, 0, "")
+	assert.Equal(t, expectedSimpleString, strings.Join(lines, "\n"))
+}
+
+func TestPrintSimpleTreeWithChildren(t *testing.T) {
+	logger := log.Get()
+	logger.LogLevel = log.Debug
+	dpService := Get(MockObject1{})
+	dpService.SetLogger(logger)
+
+	_, _ = dpService.AddRootItem("item_2", "item 2", MockObject1{id: "item_2", someStoredValue: "item 2"})
+	_, _ = dpService.AddItem("item_2_child_2", "item 2 Child 2", "item_2", MockObject1{id: "item_2_child_2", someStoredValue: "item 2 Child 2"})
+	_, _ = dpService.AddItem("item_2_child_1", "item 2 Child 1", "item_2", MockObject1{id: "item_2_child_1", someStoredValue: "item 2 Child 1"})
+	_, _ = dpService.AddItem("item_2_child_3", "item 2 Child 3", "item_2", MockObject1{id: "item_2_child_3", someStoredValue: "item 2 Child 3"})
+	_, _ = dpService.AddItem("item_2_child_1_child_2", "item 2 Child 1 Child 2", "item_2_child_1", MockObject1{id: "item_2_child_1_child_2", someStoredValue: "item 2 Child 1 Child 2"})
+	_, _ = dpService.AddItem("item_2_child_1_child_1", "item 2 Child 1 Child 1", "item_2_child_1", MockObject1{id: "item_2_child_1_child_1", someStoredValue: "item 2 Child 1 Child 1"})
+	_, _ = dpService.AddItem("item_2_child_3_child_2", "item 2 Child 3 Child 2", "item_2_child_3", MockObject1{id: "item_2_child_3_child_2", someStoredValue: "item 2 Child 3 Child 2"})
+	_, _ = dpService.AddItem("item_2_child_3_child_1", "item 2 Child 3 Child 1", "item_2_child_3", MockObject1{id: "item_2_child_3_child_1", someStoredValue: "item 2 Child 3 Child 1"})
+
+	_, err := dpService.Build()
+	assert.NoError(t, err)
+
+	lines := dpService.printTree(dpService.tree, 0, "")
+	assert.Equal(t, expectedSimpleTreeWithChildrenString, strings.Join(lines, "\n"))
+}
+
+func TestPrintComplexTree(t *testing.T) {
 	logger := log.Get()
 	logger.LogLevel = log.Debug
 	dpService := Get(MockObject1{})
@@ -64,6 +112,7 @@ func TestPrintTree(t *testing.T) {
 func TestShiftToWithInvalidIndex(t *testing.T) {
 	logger := log.Get()
 	logger.LogLevel = log.Debug
+	globalDependencyTreeService = nil
 	dpService := Get(MockObject1{})
 	dpService.SetLogger(logger)
 
