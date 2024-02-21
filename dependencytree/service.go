@@ -49,7 +49,7 @@ func Get[T interface{}](v T) *DependencyTreeService[T] {
 }
 
 func (d *DependencyTreeService[T]) String() string {
-	lines := d.printTree(d.tree, 0, "")
+	lines := d.printTree(d.tree, 0, "", false)
 	return strings.Join(lines, "\n")
 }
 

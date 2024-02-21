@@ -47,7 +47,7 @@ func TestPrintSimpleTree(t *testing.T) {
 	_, err := dpService.Build()
 	assert.NoError(t, err)
 
-	lines := dpService.printTree(dpService.tree, 0, "")
+	lines := dpService.printTree(dpService.tree, 0, "", true)
 	assert.Equal(t, expectedSimpleString, strings.Join(lines, "\n"))
 }
 
@@ -69,7 +69,7 @@ func TestPrintSimpleTreeWithChildren(t *testing.T) {
 	_, err := dpService.Build()
 	assert.NoError(t, err)
 
-	lines := dpService.printTree(dpService.tree, 0, "")
+	lines := dpService.printTree(dpService.tree, 0, "", true)
 	assert.Equal(t, expectedSimpleTreeWithChildrenString, strings.Join(lines, "\n"))
 }
 
@@ -105,7 +105,7 @@ func TestPrintComplexTree(t *testing.T) {
 	_, err := dpService.Build()
 	assert.NoError(t, err)
 
-	lines := dpService.printTree(dpService.tree, 0, "")
+	lines := dpService.printTree(dpService.tree, 0, "", false)
 	assert.Equal(t, expectedComplexString, strings.Join(lines, "\n"))
 }
 
