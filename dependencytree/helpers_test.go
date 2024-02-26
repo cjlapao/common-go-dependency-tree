@@ -39,6 +39,7 @@ var expectedComplexString = `┌─ item 1
 func TestPrintSimpleTree(t *testing.T) {
 	logger := log.Get()
 	logger.LogLevel = log.Debug
+	globalDependencyTreeService = nil
 	dpService := Get(MockObject1{})
 	dpService.SetLogger(logger)
 
@@ -54,6 +55,7 @@ func TestPrintSimpleTree(t *testing.T) {
 func TestPrintSimpleTreeWithChildren(t *testing.T) {
 	logger := log.Get()
 	logger.LogLevel = log.Debug
+	globalDependencyTreeService = nil
 	dpService := Get(MockObject1{})
 	dpService.SetLogger(logger)
 
@@ -76,6 +78,7 @@ func TestPrintSimpleTreeWithChildren(t *testing.T) {
 func TestPrintComplexTree(t *testing.T) {
 	logger := log.Get()
 	logger.LogLevel = log.Debug
+	globalDependencyTreeService = nil
 	dpService := Get(MockObject1{})
 	dpService.SetLogger(logger)
 
