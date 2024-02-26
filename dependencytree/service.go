@@ -41,7 +41,7 @@ func Get[T interface{}](v T) *DependencyTreeService[T] {
 		flatTree: []*DependencyTreeItem[T]{},
 		tree:     []*DependencyTreeItem[T]{},
 	}
-	globalDependencyTreeService = append(globalDependencyTreeService, newTreeType)
+	globalDependencyTreeService = append(globalDependencyTreeService, &newTreeType)
 
 	lock.Unlock()
 
@@ -49,7 +49,7 @@ func Get[T interface{}](v T) *DependencyTreeService[T] {
 }
 
 func (d *DependencyTreeService[T]) String() string {
-	lines := d.printTree(d.tree, 0, "")
+	lines := d.printTree(d.tree, 0, "", false)
 	return strings.Join(lines, "\n")
 }
 
@@ -111,25 +111,12 @@ func (d *DependencyTreeService[T]) DependsOn(id string, dependencyId string) err
 }
 
 func (d *DependencyTreeService[T]) AddItem(id string, name string, parent string, value T) (*DependencyTreeItem[T], error) {
-	parentItem := d.GetItem(parent)
-	if parentItem == nil {
-		return nil, fmt.Errorf("parent %v not found", parent)
-	}
-	for _, item := range parentItem.Children {
-		if strings.EqualFold(item.Name, name) || strings.EqualFold(item.ID, id) {
-			return nil, fmt.Errorf("item with name %v already exists in parent %v", name, parentItem.Name)
-		}
-	}
-
 	treeItem, err := NewDependencyTreeItem[T](id, name, value)
 	if err != nil {
 		return nil, err
 	}
 
-	treeItem.isDependentOn = append(treeItem.isDependentOn, parentItem.ID)
-	parentItem.AddChild(treeItem)
-
-	treeItem.SetParent(parentItem.Name)
+	treeItem.SetParent(parent)
 
 	err = d.AddDependencyTreeItem(treeItem)
 	if err != nil {
@@ -195,7 +182,7 @@ func (d *DependencyTreeService[T]) GetItemByParent(parent string) []*DependencyT
 	result := []*DependencyTreeItem[T]{}
 
 	for _, item := range d.flatTree {
-		if strings.EqualFold(item.Parent(), parent) {
+		if strings.EqualFold(item.GetParentName(), parent) || strings.EqualFold(item.GetParentId(), parent) {
 			result = append(result, item)
 		}
 	}

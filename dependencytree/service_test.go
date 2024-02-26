@@ -197,7 +197,7 @@ func TestAddRootItem(t *testing.T) {
 		require.Nil(t, err)
 		assert.Len(t, service.flatTree, 1)
 		assert.Equal(t, service.flatTree[0].obj.ID(), mockClass.ID())
-		assert.Equal(t, "root", service.flatTree[0].Parent())
+		assert.Equal(t, "root", service.flatTree[0].GetParentName())
 	})
 
 	t.Run("Fail to create root item with missing id", func(t *testing.T) {
@@ -257,9 +257,9 @@ func TestAddItem(t *testing.T) {
 		require.Nil(t, errChild)
 		assert.Len(t, service.flatTree, 2)
 		assert.Equal(t, service.flatTree[0].obj.ID(), mockParentClass.ID())
-		assert.Equal(t, "root", service.flatTree[0].Parent())
+		assert.Equal(t, "root", service.flatTree[0].GetParentName())
 		assert.Equal(t, service.flatTree[1].obj.ID(), mockChildClass.ID())
-		assert.Equal(t, "TestParent", service.flatTree[1].Parent())
+		assert.Equal(t, "TestParent", service.flatTree[1].GetParentName())
 	})
 
 	t.Run("Fail to create DependencyTreeItem with missing parent", func(t *testing.T) {

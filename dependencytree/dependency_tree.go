@@ -13,6 +13,11 @@ func (d *DependencyTreeService[T]) Build() ([]*DependencyTreeItem[T], error) {
 		}
 	}
 
+	// Expanding the tree to include the parent and children
+	if err := d.expandFlatTree(); err != nil {
+		return nil, err
+	}
+
 	// Initial Pass to flatten our dependency tree based on linear dependency
 	values, err := d.buildRightDependency()
 	if err != nil {
@@ -53,6 +58,32 @@ func (d *DependencyTreeService[T]) Build() ([]*DependencyTreeItem[T], error) {
 	}
 
 	return values, nil
+}
+
+func (d *DependencyTreeService[T]) expandFlatTree() error {
+	for _, item := range d.flatTree {
+		if item.GetParentName() == "" || item.GetParentName() == "root" {
+			d.printVerbosef("Item %s is a root item", item.Name)
+			continue
+		}
+
+		parent := d.GetItem(item.GetParentName())
+		if parent == nil {
+			d.printVerbosef("Could not find ttem %s parent, ignoring it", item.Name)
+		} else {
+			d.printVerbosef("Item %s has a parent %s", item.Name, parent.Name)
+		}
+
+		item.parentName = parent.ID
+		item.Parent = parent
+		err := item.DependsOn(parent.ID)
+		if err != nil {
+			return err
+		}
+		parent.AddChild(item)
+	}
+
+	return nil
 }
 
 func (d *DependencyTreeService[T]) buildTree(parent string) []*DependencyTreeItem[T] {
@@ -245,7 +276,7 @@ func (d *DependencyTreeService[T]) shiftChildItems(index int) (bool, error) {
 		offset := offsetParentIndex + currentChildIndex + 1
 
 		if currentIdx != offset {
-			d.printVerbosef("Parent: %v, Child: %v\n", d.flatTree[index].Name, child.Name)
+			d.printVerbosef("Parent: %v, Child: %v", d.flatTree[index].Name, child.Name)
 			shiftedItem = true
 
 			d.printVerbosef("Shifting %s child %v on index %s to index %s", d.flatTree[index].Name, child.Name, strconv.Itoa(currentIdx), strconv.Itoa(offset))
